@@ -11,26 +11,46 @@ const resolvers = {
     },
   },
   Mutation: {
-    login: async (parent, args) => {
-      const matchup = await Matchup.create(args);
-      return matchup;
+    addUser: async (parent, { username, email, password }) => {
+        const user = await User.create({ username, email, password });
+        const token = signToken(user);
+        return { token, user };
     },
-    addUser: async (parent, args) => {
-      const vote = await Matchup.findOneAndUpdate(
-        { _id },
-        { $inc: { [`tech${techNum}_votes`]: 1 } },
-        { new: true }
-      );
-      return vote;
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
+      if (!user) {
+        throw new Error('User not found');
+      }
+      const isCorrectPassword = await user.isCorrectPassword(password);
+      if (!isCorrectPassword) {
+        throw new Error('Incorrect password');
+      }
+      const token = signToken(user);
+      return { token, user };
     },
-    SaveBook: async (parent, args, context) => {
-        const vote = await Matchup.findOneAndUpdate(
-          { _id },
-          { $inc: { [`tech${techNum}_votes`]: 1 } },
+    saveBook: async (parent, { bookInput }, context) => {
+        try {
+            const updateUser = await User.findOneAndUpdate(
+                { _id: context.user.id },
+                { $addToSet: { savedBooks: bookInput } },
+                { new: true, runValidators: true }
+            );
+            return updateUser;
+        } catch (err) {
+            throw new Error('Error saving book');
+        }
+    },
+    removeBook: async (parent, { bookId }, context) => {
+        const updateUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId } } },
           { new: true }
         );
-        return vote;
-      },
+        if (!updateUser) {
+            throw new Error('Unable to remove book');
+        }
+        return updateUser;
+    },
   },
 };
 
