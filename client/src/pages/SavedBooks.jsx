@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Container,
   Card,
@@ -15,9 +15,9 @@ import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 
 const SavedBooks = () => {
-  const { loading, data } = useQuery(GET_ME);
+  const { loading, error, data } = useQuery(GET_ME);
   const [userData, setUserData] = useState(data?.me || {});
-  const [ removeBook ] = useMutation(REMOVE_BOOK, {
+  const [removeBook] = useMutation(REMOVE_BOOK, {
     refetchQueries: [{ query: GET_ME}]
   });
 
@@ -30,25 +30,25 @@ const SavedBooks = () => {
     }
 
     try {
-      const response = await removeBook({
+      const { data } = await removeBook({
         variables: {
           bookId: bookId
         }
       });
 
-      if (!response.ok) {
+      if (data.removeBook) {
+        setUserData(data.removeBook);
+        removeBookId(bookId);
+      } else {
         throw new Error('something went wrong!');
       }
-
-      // upon success, remove book's id from localStorage
-      removeBookId(bookId);
     } catch (err) {
       console.error(err);
     }
   };
 
   // if data isn't here yet, say so
-  if (!userDataLength) {
+  if (loading) {
     return <h2>LOADING...</h2>;
   }
 
