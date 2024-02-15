@@ -1,17 +1,18 @@
 const typeDefs = `
     type User {
-        _id: ID!
-        username: String!
-        email: String!
+        _id: ID
+        username: String
+        email: String
+        password: String
         bookCount: Int
         savedBooks: [Book]
     }
 
     type Book {
-        bookId: ID!
+        bookId: String
         authors: [String]
         description: String
-        title: String!
+        title: String
         image: String
         link: String
     }
@@ -35,8 +36,8 @@ const typeDefs = `
     input BookInput {
         authors: [String]
         description: String
-        title: String!
-        bookId: String!
+        title: String
+        bookId: String
         image: String
         link: String
     }
