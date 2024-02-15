@@ -1,5 +1,5 @@
 const { User } = require('../models');
-const { signToken } = require('../utils/auth');
+const { signToken, AuthenticationError } = require('../utils/auth');
 
 const resolvers = {
   Query: {
@@ -7,7 +7,7 @@ const resolvers = {
         if (context.user) {
             return User.findOne({ _id: context.user._id });
         }
-        throw new Error('User not found.');
+        throw AuthenticationError;
     },
   },
   Mutation: {
@@ -19,11 +19,11 @@ const resolvers = {
     login: async (parent, { email, password }) => {
       const user = await User.findOne({ email });
       if (!user) {
-        throw new Error('User not found');
+        throw AuthenticationError;
       }
       const isCorrectPassword = await user.isCorrectPassword(password);
       if (!isCorrectPassword) {
-        throw new Error('Incorrect password');
+        throw AuthenticationError;
       }
       const token = signToken(user);
       return { token, user };
