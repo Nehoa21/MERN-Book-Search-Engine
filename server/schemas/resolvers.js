@@ -5,7 +5,11 @@ const resolvers = {
   Query: {
     me: async (parent, args, context) => {
         if (context.user) {
-            return User.findOne({ _id: context.user._id });
+            return User.findOne({ _id: context.user._id }).select('-password').populate({
+              path: 'savedBooks',
+              select: '__v'
+            })
+            .exec();
         }
         throw AuthenticationError;
     },
